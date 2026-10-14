@@ -1,2 +1,3 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://192.168.137.134:8080";
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || "https://smartcampus-helpdesk.onrender.com"
+).replace(/\/+$/, "");
