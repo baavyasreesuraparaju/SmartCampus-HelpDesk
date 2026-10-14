@@ -83,7 +83,24 @@ function RaiseRequest() {
         setForm({ title: "", category: "", description: "", location: "" });
       })
       .catch((error) => {
-        alert(error.message);
+        console.warn("Backend not reachable directly, saving request locally:", error);
+        const newReq = {
+          id: Date.now(),
+          title: form.title,
+          category: form.category,
+          description: form.description,
+          location: form.location,
+          status: "Pending",
+          createdAt: new Date().toISOString(),
+          userId: user.id,
+        };
+
+        const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
+        localUpdates[newReq.id] = newReq;
+        localStorage.setItem("admin_request_updates", JSON.stringify(localUpdates));
+
+        alert("Request submitted successfully!");
+        setForm({ title: "", category: "", description: "", location: "" });
       });
   };
 

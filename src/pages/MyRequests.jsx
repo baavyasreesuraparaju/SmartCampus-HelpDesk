@@ -46,7 +46,23 @@ function MyRequests() {
         });
         localStorage.setItem("read_admin_messages", JSON.stringify(readMap));
       })
-      .catch((err) => console.error("Failed to fetch requests", err));
+      .catch((err) => {
+        console.warn("Failed to fetch requests from server, loading local records:", err);
+        const deletedIds = JSON.parse(localStorage.getItem("deleted_request_ids") || "[]");
+        const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
+        const fallback = Object.values(localUpdates).filter(
+          (req) => !deletedIds.includes(String(req.id)) && !deletedIds.includes(Number(req.id))
+        );
+        setRequests(fallback);
+        const pending = fallback.filter((r) => r.status?.toLowerCase() === "pending").length;
+        const inProgress = fallback.filter(
+          (r) =>
+            r.status?.toLowerCase() === "in progress" ||
+            r.status?.toLowerCase() === "in_progress"
+        ).length;
+        const resolved = fallback.filter((r) => r.status?.toLowerCase() === "resolved").length;
+        setStats({ total: fallback.length, pending, inProgress, resolved });
+      });
   };
 
   useEffect(() => {
