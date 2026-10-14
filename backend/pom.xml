@@ -41,6 +41,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- H2 In-Memory Database for cloud deployment fallback when no external MySQL is attached -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- DevTools for auto-restart -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
