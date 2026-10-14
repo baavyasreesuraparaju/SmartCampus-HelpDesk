@@ -18,14 +18,21 @@ function MyRequests() {
         const deletedIds = JSON.parse(localStorage.getItem("deleted_request_ids") || "[]");
         const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
 
-        const merged = data
-          .filter((req) => !deletedIds.includes(String(req.id)) && !deletedIds.includes(Number(req.id)))
-          .map((req) => {
-            if (localUpdates[req.id]) {
-              return { ...req, ...localUpdates[req.id] };
-            }
-            return req;
-          });
+        const serverMap = new Map();
+        (Array.isArray(data) ? data : []).forEach((req) => {
+          serverMap.set(String(req.id), req);
+        });
+
+        // Add locally stored requests for this user
+        Object.values(localUpdates).forEach((req) => {
+          if (!req.userId || String(req.userId) === String(user.id)) {
+            serverMap.set(String(req.id), { ...(serverMap.get(String(req.id)) || {}), ...req });
+          }
+        });
+
+        const merged = Array.from(serverMap.values()).filter(
+          (req) => !deletedIds.includes(String(req.id)) && !deletedIds.includes(Number(req.id))
+        );
 
         setRequests(merged);
         const pending = merged.filter((r) => r.status?.toLowerCase() === "pending").length;

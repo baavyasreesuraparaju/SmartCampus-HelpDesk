@@ -23,14 +23,23 @@ function StudentDashboard() {
       .then((data) => {
         const deletedIds = JSON.parse(localStorage.getItem("deleted_request_ids") || "[]");
         const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
-        const merged = data
-          .filter((req) => !deletedIds.includes(String(req.id)) && !deletedIds.includes(Number(req.id)))
-          .map((req) => {
-            if (localUpdates[req.id]) {
-              return { ...req, ...localUpdates[req.id] };
-            }
-            return req;
-          });
+        
+        // Map server data and override with local updates if any
+        const serverMap = new Map();
+        (Array.isArray(data) ? data : []).forEach((req) => {
+          serverMap.set(String(req.id), req);
+        });
+
+        // Add locally stored requests that belong to this user
+        Object.values(localUpdates).forEach((req) => {
+          if (!req.userId || String(req.userId) === String(userData.id)) {
+            serverMap.set(String(req.id), { ...(serverMap.get(String(req.id)) || {}), ...req });
+          }
+        });
+
+        const merged = Array.from(serverMap.values()).filter(
+          (req) => !deletedIds.includes(String(req.id)) && !deletedIds.includes(Number(req.id))
+        );
 
         setRequests(merged);
         const pending = merged.filter((r) => r.status?.toLowerCase() === "pending").length;
@@ -42,7 +51,10 @@ function StudentDashboard() {
         const deletedIds = JSON.parse(localStorage.getItem("deleted_request_ids") || "[]");
         const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
         const fallback = Object.values(localUpdates).filter(
-          (req) => !deletedIds.includes(String(req.id)) && !deletedIds.includes(Number(req.id))
+          (req) =>
+            (!req.userId || String(req.userId) === String(userData.id)) &&
+            !deletedIds.includes(String(req.id)) &&
+            !deletedIds.includes(Number(req.id))
         );
         setRequests(fallback);
         const pending = fallback.filter((r) => r.status?.toLowerCase() === "pending").length;

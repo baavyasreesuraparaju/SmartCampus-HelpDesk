@@ -79,8 +79,25 @@ function RaiseRequest() {
         return response.json();
       })
       .then((data) => {
+        // Guarantee the request appears immediately in dashboard, my-requests, and admin pages
+        const reqItem = {
+          id: data.id || Date.now(),
+          title: data.title || form.title,
+          category: data.category || form.category,
+          description: data.description || form.description,
+          location: data.location || form.location,
+          status: data.status || "Pending",
+          createdAt: data.createdAt || new Date().toISOString(),
+          userId: user.id,
+          user: user,
+        };
+        const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
+        localUpdates[reqItem.id] = reqItem;
+        localStorage.setItem("admin_request_updates", JSON.stringify(localUpdates));
+
         alert("Request submitted successfully!");
         setForm({ title: "", category: "", description: "", location: "" });
+        navigate("/my-requests");
       })
       .catch((error) => {
         console.warn("Backend not reachable directly, saving request locally:", error);
@@ -93,6 +110,7 @@ function RaiseRequest() {
           status: "Pending",
           createdAt: new Date().toISOString(),
           userId: user.id,
+          user: user,
         };
 
         const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
@@ -101,6 +119,7 @@ function RaiseRequest() {
 
         alert("Request submitted successfully!");
         setForm({ title: "", category: "", description: "", location: "" });
+        navigate("/my-requests");
       });
   };
 
