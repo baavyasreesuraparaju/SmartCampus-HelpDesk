@@ -25,7 +25,13 @@ function MyRequests() {
 
         // Add locally stored requests for this user
         Object.values(localUpdates).forEach((req) => {
-          if (!req.userId || String(req.userId) === String(user.id)) {
+          const matchesUser =
+            !req.userId ||
+            String(req.userId) === String(user.id) ||
+            (req.user && req.user.email && user.email && req.user.email.toLowerCase() === user.email.toLowerCase()) ||
+            (req.user && req.user.studentId && user.studentId && String(req.user.studentId).toLowerCase() === String(user.studentId).toLowerCase());
+
+          if (matchesUser) {
             serverMap.set(String(req.id), { ...(serverMap.get(String(req.id)) || {}), ...req });
           }
         });
@@ -57,9 +63,19 @@ function MyRequests() {
         console.warn("Failed to fetch requests from server, loading local records:", err);
         const deletedIds = JSON.parse(localStorage.getItem("deleted_request_ids") || "[]");
         const localUpdates = JSON.parse(localStorage.getItem("admin_request_updates") || "{}");
-        const fallback = Object.values(localUpdates).filter(
-          (req) => !deletedIds.includes(String(req.id)) && !deletedIds.includes(Number(req.id))
-        );
+        const fallback = Object.values(localUpdates).filter((req) => {
+          const matchesUser =
+            !req.userId ||
+            String(req.userId) === String(user.id) ||
+            (req.user && req.user.email && user.email && req.user.email.toLowerCase() === user.email.toLowerCase()) ||
+            (req.user && req.user.studentId && user.studentId && String(req.user.studentId).toLowerCase() === String(user.studentId).toLowerCase());
+
+          return (
+            matchesUser &&
+            !deletedIds.includes(String(req.id)) &&
+            !deletedIds.includes(Number(req.id))
+          );
+        });
         setRequests(fallback);
         const pending = fallback.filter((r) => r.status?.toLowerCase() === "pending").length;
         const inProgress = fallback.filter(
